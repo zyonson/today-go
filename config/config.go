@@ -2,13 +2,15 @@ package config
 
 import (
 	"log"
+	"os"
 
-	"gopkg.in/go-ini/ini.v1"
+	"github.com/joho/godotenv"
 )
 
 type ConfigList struct {
-	Port   string
-	Static string
+	Port             string
+	Static           string
+	GoogleMapsAPIKey string
 }
 
 var Config ConfigList
@@ -18,13 +20,14 @@ func init() {
 }
 
 func LoadConfig() {
-	cfg, err := ini.Load("config.ini")
+	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatalln(err)
+		log.Println("環境変数ファイル(.env)の読み込みに失敗しました:", err)
 	}
 
 	Config = ConfigList{
-		Port:   cfg.Section("web").Key("port").MustString("8080"),
-		Static: cfg.Section("web").Key("static").String(),
+		Port:             os.Getenv("PORT"),
+		Static:           os.Getenv("STATIC"),
+		GoogleMapsAPIKey: os.Getenv("GOOGLE_MAPS_API_KEY"),
 	}
 }
