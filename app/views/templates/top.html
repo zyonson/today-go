@@ -20,29 +20,25 @@
     </div>
     {{end}}
 
-    <h1>お店一覧</h1>
-    {{range .places.Places}}
-    <div class="card mb-3">
-      <div class="card-body">
-        <h5 class="card-title">{{.DisplayName.Text}}</h5>
-        <p class="card-text">評価：{{.Rating}}</p>
-        <a
-          href="{{.MapUri}}"
-          class="btn btn-primary"
-          target="_blank"
-          rel="noopener noreferrer"
-          >地図を見る</a
-        >
-        <a
-          href="{{.StoreSite}}"
-          class="btn btn-secondary"
-          target="_blank"
-          rel="noopener noreferrer"
-          >公式サイト</a
-        >
+    <h1>近くの飲食店</h1>
+    <div id="store-container">
+      {{range .places.Places}}
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">{{.DisplayName.Text}}</h5>
+          <p class="card-text">評価：{{.Rating}}</p>
+          <a
+            href="{{.MapUri}}"
+            class="btn btn-primary"
+            target="_blank"
+            rel="noopener noreferrer"
+            >地図を見る</a
+          >
+        </div>
       </div>
+      {{end}}
+
     </div>
-    {{end}}
 
     <script async defer src="https://maps.googleapis.com/maps/api/js?key={{.apiKey}}&callback=initMap"></script>
     <script src="/static/js/map.js"></script>
