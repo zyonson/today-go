@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"text/template"
-	"today-go/config"
+	. "today-go/config"
 )
 
 func generateHTML(w http.ResponseWriter, data interface{}, filenames ...string) {
@@ -18,9 +18,9 @@ func generateHTML(w http.ResponseWriter, data interface{}, filenames ...string) 
 }
 
 func StartMainServer() error {
-	files := http.FileServer(http.Dir(config.Config.Static))
+	files := http.FileServer(http.Dir(Config.Static))
 	http.Handle("/static/", http.StripPrefix("/static/", files))
 
 	http.HandleFunc("/", index)
-	return http.ListenAndServe(":"+config.Config.Port, nil)
+	return http.ListenAndServe(":"+Config.Port, nil)
 }
