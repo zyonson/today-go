@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	. "today-go/config"
@@ -152,7 +153,7 @@ func ShowEventsAndPlaces(w http.ResponseWriter, r *http.Request) {
 	var eventList []Event
 	for _, item := range events.Items {
 		eventName := item.Summary
-		destiNation := item.Location
+		destiNation := strings.Split(item.Location, ",")[0]
 
 		eventList = append(eventList, Event{
 			EventName:   eventName,
