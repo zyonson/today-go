@@ -21,6 +21,6 @@ func StartMainServer() error {
 	files := http.FileServer(http.Dir(Config.Static))
 	http.Handle("/static/", http.StripPrefix("/static/", files))
 
-	http.HandleFunc("/", index)
+	http.HandleFunc("/", ShowEventsAndPlaces)
 	return http.ListenAndServe(":"+Config.Port, nil)
 }

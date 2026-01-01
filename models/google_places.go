@@ -1,12 +1,12 @@
 package models
 
 type EventList struct {
-	Events []Event `json:"items"`
+	Events []*Event `json:"items,omitempty"`
 }
 
 type Event struct {
-	EventName   string `json:"summary"`
-	DestiNation string `json:"location"`
+	EventName   string `json:"summary,omitempty"`
+	DestiNation string `json:"location,omitempty"`
 }
 
 type DisplayName struct {
