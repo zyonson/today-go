@@ -1,0 +1,51 @@
+{{define "top"}}
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TodayGo</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/css/form.css" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body class="container">
+    {{with index .eventList 0}}
+    <h1>今日の予定: <strong>{{.EventName}}</strong></h1>
+    <p>目的地: <span id="destination">{{.DestiNation}}</span></p>
+    <p>所要時間: <span id="duration">取得中...</span></p>
+    <div class="api-container">
+      <div id="map"></div>
+      <div id="driving"></div>
+    </div>
+    {{end}}
+
+    <h1>近くの飲食店</h1>
+    <div id="store-container">
+      {{range .places.Places}}
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">{{.DisplayName.Text}}</h5>
+          <p class="card-text">評価：{{.Rating}}</p>
+          <a
+            href="{{.MapUri}}"
+            class="btn btn-primary"
+            target="_blank"
+            rel="noopener noreferrer"
+            >地図を見る</a
+          >
+        </div>
+      </div>
+      {{end}}
+    </div>
+
+    <script
+      async
+      defer
+      src="https://maps.googleapis.com/maps/api/js?key={{.apiKey}}&callback=initMap"
+    ></script>
+    <script src="/static/js/map.js"></script>
+    <script src="/static/js/jquery-3.7.1.min.js"></script>
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
+{{end}}
