@@ -200,6 +200,9 @@ func ShowEventsAndPlaces(w http.ResponseWriter, r *http.Request) {
 		"places":    PlacesResponse{Places: places},
 		"apiKey":    apiKey,
 	}
-
-	generateHTML(w, data, "top")
+	if eventList[0].DestiNation == "" {
+		generateHTML(w, data, "sub")
+	} else {
+		generateHTML(w, data, "top")
+	}
 }
