@@ -131,8 +131,14 @@ func ShowEventsAndPlaces(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t := time.Now().Format(time.RFC3339)
-	events, err := srv.Events.List("primary").ShowDeleted(false).SingleEvents(true).TimeMin(t).MaxResults(10).OrderBy("startTime").Do()
+	now := time.Now()
+	currentTime := now.Format(time.RFC3339)
+	endOfDay := time.Date(
+		now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, now.Location(),
+	)
+	endStr := endOfDay.Format(time.RFC3339)
+
+	events, err := srv.Events.List("primary").ShowDeleted(false).SingleEvents(true).TimeMin(currentTime).TimeMax(endStr).MaxResults(10).OrderBy("startTime").Do()
 	//fmt.Printf("json結果 %s", events)
 	if err != nil {
 		http.Error(w, "イベントの取得に失敗しました", http.StatusInternalServerError)
@@ -140,7 +146,7 @@ func ShowEventsAndPlaces(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(events.Items) == 0 {
-		http.Error(w, "今後のイベントが見つかりませんでした", http.StatusNotFound)
+		http.Error(w, "今日のイベントが見つかりませんでした。", http.StatusNotFound)
 		return
 	}
 
