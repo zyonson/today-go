@@ -139,7 +139,7 @@ func ShowEventsAndPlaces(w http.ResponseWriter, r *http.Request) {
 	endStr := endOfDay.Format(time.RFC3339)
 
 	events, err := srv.Events.List("primary").ShowDeleted(false).SingleEvents(true).TimeMin(currentTime).TimeMax(endStr).MaxResults(10).OrderBy("startTime").Do()
-	//fmt.Printf("json結果 %s", events)
+
 	if err != nil {
 		http.Error(w, "イベントの取得に失敗しました", http.StatusInternalServerError)
 		return
