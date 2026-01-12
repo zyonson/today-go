@@ -1,5 +1,9 @@
 package models
 
+type TokenRequest struct {
+	AccessToken string `json:"access_token"`
+	Email       string `json:"email"`
+}
 type EventList struct {
 	Events []*Event `json:"items,omitempty"`
 }
