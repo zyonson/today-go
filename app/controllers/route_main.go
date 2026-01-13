@@ -119,8 +119,8 @@ func handleData(w http.ResponseWriter, r *http.Request) {
 	var places []Place
 	for _, r := range result.Results {
 		places = append(places, Place{
-			Rating: r.Rating,
-			MapUri: fmt.Sprintf("https://www.google.com/maps/search/?api=1&query_place_id=%s", r.PlaceID),
+			Rating:        r.Rating,
+			GoogleMapsUri: fmt.Sprintf("https://www.google.com/maps/place/?q=place_id:%s", r.PlaceID),
 			DisplayName: DisplayName{
 				Text: r.Name,
 			},
