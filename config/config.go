@@ -11,6 +11,7 @@ type ConfigList struct {
 	Port             string
 	Static           string
 	GoogleMapsAPIKey string
+	SessionSecret    string
 }
 
 var Config ConfigList
@@ -29,5 +30,6 @@ func LoadConfig() {
 		Port:             os.Getenv("PORT"),
 		Static:           os.Getenv("STATIC"),
 		GoogleMapsAPIKey: os.Getenv("GOOGLE_MAPS_API_KEY"),
+		SessionSecret:    os.Getenv("SESSION_SECRET"),
 	}
 }

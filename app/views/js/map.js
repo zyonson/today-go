@@ -1,4 +1,4 @@
-function initMap() {
+initMap = function () {
   const destination = document.getElementById("destination").textContent;
 
   navigator.geolocation.getCurrentPosition(
@@ -46,4 +46,4 @@ function initMap() {
       alert("現在地の取得に失敗しました: " + error.message);
     }
   );
-}
+};

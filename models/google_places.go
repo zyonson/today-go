@@ -1,5 +1,9 @@
 package models
 
+type TokenRequest struct {
+	AccessToken string `json:"access_token"`
+	Email       string `json:"email"`
+}
 type EventList struct {
 	Events []*Event `json:"items,omitempty"`
 }
@@ -14,9 +18,9 @@ type DisplayName struct {
 }
 
 type Place struct {
-	Rating      float64     `json:"rating"`
-	MapUri      string      `json:"googleMapsUri"`
-	DisplayName DisplayName `json:"displayName"`
+	Rating        float64     `json:"rating"`
+	GoogleMapsUri string      `json:"googleMapsUri"`
+	DisplayName   DisplayName `json:"displayName"`
 }
 
 type PlacesResponse struct {
