@@ -1,4 +1,4 @@
-initMap = function () {
+window.initMap = function () {
   const destination = document.getElementById("destination").textContent;
 
   navigator.geolocation.getCurrentPosition(
@@ -32,18 +32,18 @@ initMap = function () {
 
             const steps = leg.steps;
             const drivingInfo = steps.map(
-              (step) => `<div>${step.instructions}</div>`
+              (step) => `<div>${step.instructions}</div>`,
             );
             document.getElementById("driving").innerHTML =
               drivingInfo.join("<hr>");
           } else {
             alert("ルート検索に失敗しました: " + status);
           }
-        }
+        },
       );
     },
     function (error) {
       alert("現在地の取得に失敗しました: " + error.message);
-    }
+    },
   );
 };
