@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
@@ -19,9 +19,24 @@
     </div>
 
     <h1>近くの飲食店</h1>
+    <select
+      name="genre"
+      id="genre-tabs"
+      class="form-select form-select-sm mb-3"
+    >
+      <option value="飲食店">飲食店</option>
+      <option value="中華">中華</option>
+      <option value="イタリアン">イタリアン</option>
+      <option value="和食">和食</option>
+      <option value="カフェ">カフェ</option>
+      <option value="居酒屋">居酒屋</option>
+    </select>
+
     <div id="store-container"></div>
 
     <script src="/static/js/google-api.js"></script>
+    <script src="/static/js/store-filter.js"></script>
+    <script src="/static/js/show-store.js"></script>
     <script src="/static/js/map.js"></script>
     <script src="/static/js/jquery-3.7.1.min.js"></script>
     <script src="/static/js/bootstrap.bundle.min.js"></script>

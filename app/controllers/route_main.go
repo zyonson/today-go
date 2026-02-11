@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	. "today-go/config"
@@ -34,7 +36,8 @@ func handleToken(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session-name")
 	session.Values["access_token"] = req.AccessToken
 	session.Values["userId"] = req.Email
-
+	log.Println(req.AccessToken)
+	log.Println(req.Email)
 	if err := session.Save(r, w); err != nil {
 		http.Error(w, "セッション保存に失敗しました", http.StatusInternalServerError)
 		return
@@ -48,7 +51,15 @@ func handleTop(w http.ResponseWriter, r *http.Request) {
 
 func handleData(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session-name")
-	accessToken, _ := session.Values["access_token"].(string)
+
+	accessTokenRaw := session.Values["access_token"]
+	accessToken, ok := accessTokenRaw.(string)
+	if !ok || accessToken == "" {
+		log.Println("アクセストークンが見つかりません")
+		writeJSONError(w, "ログイン情報が無効です", http.StatusUnauthorized)
+		return
+	}
+
 	token := &oauth2.Token{AccessToken: accessToken}
 	client := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(token))
 	srv, err := calendar.NewService(context.Background(), option.WithHTTPClient(client))
@@ -93,9 +104,35 @@ func handleData(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	query := "レストラン " + eventList[0].DestiNation
-	endpoint := "https://maps.googleapis.com/maps/api/place/textsearch/json"
+	genres := []string{"飲食店", "中華", "イタリアン", "和食", "カフェ", "居酒屋"}
+	results := make(map[string][]Place)
 
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	for _, genre := range genres {
+		wg.Add(1)
+		go func(g string) {
+			defer wg.Done()
+			places := fetchPlacesFromGoogleAPI(g, eventList[0].DestiNation, apiKey)
+			mu.Lock()
+			results[g] = places
+			mu.Unlock()
+		}(genre)
+	}
+	wg.Wait()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"eventList": eventList,
+		"places":    PlacesResponse{Places: results},
+		"apiKey":    apiKey,
+	})
+}
+
+func fetchPlacesFromGoogleAPI(genre string, destination string, apiKey string) []Place {
+	query := fmt.Sprintf("レストラン %s %s", genre, destination)
+	endpoint := "https://maps.googleapis.com/maps/api/place/textsearch/json"
 	params := url.Values{}
 	params.Add("query", query)
 	params.Add("key", apiKey)
@@ -105,19 +142,19 @@ func handleData(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := http.Get(fullURL)
 	if err != nil {
-		http.Error(w, "Google Maps APIリクエストに失敗しました", http.StatusInternalServerError)
-		return
+		log.Printf("Google Maps APIリクエストに失敗しました: %v", err)
+		return nil
 	}
 	defer resp.Body.Close()
 
-	var result PlacesAPIResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		http.Error(w, "Google Maps APIレスポンスの解析に失敗しました", http.StatusInternalServerError)
-		return
+	var storeInfo PlacesAPIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&storeInfo); err != nil {
+		log.Printf("Google Maps APIレスポンスの解析に失敗しました: %v", err)
+		return nil
 	}
 
 	var places []Place
-	for _, r := range result.Results {
+	for _, r := range storeInfo.Results {
 		places = append(places, Place{
 			Rating:        r.Rating,
 			GoogleMapsUri: fmt.Sprintf("https://www.google.com/maps/place/?q=place_id:%s", r.PlaceID),
@@ -127,10 +164,13 @@ func handleData(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	return places
+}
+
+func writeJSONError(w http.ResponseWriter, message string, code int) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"eventList": eventList,
-		"places":    PlacesResponse{Places: places},
-		"apiKey":    apiKey,
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(map[string]string{
+		"error": message,
 	})
 }
