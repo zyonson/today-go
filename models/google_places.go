@@ -24,7 +24,7 @@ type Place struct {
 }
 
 type PlacesResponse struct {
-	Places []Place `json:"places"`
+	Places map[string][]Place `json:"places"`
 }
 
 type PlacesAPIResponse struct {
