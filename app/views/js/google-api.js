@@ -1,7 +1,10 @@
-const cache = sessionStorage.getItem("allPlaces");
+const CACHE_KEY = "allPlaces";
+const CACHE_TTL_MS = 60 * 60 * 1000;
+
+const cache = sessionStorage.getItem(CACHE_KEY);
 let allPlaces = {};
 
-if (!cache || Date.now() - JSON.parse(cache).timestamp > 60 * 60 * 1000) {
+if (!cache || Date.now() - JSON.parse(cache).timestamp > CACHE_TTL_MS) {
   fetch("/api/data")
     .then(async (res) => {
       const contentType = res.headers.get("content-type") || "";
@@ -30,7 +33,7 @@ if (!cache || Date.now() - JSON.parse(cache).timestamp > 60 * 60 * 1000) {
       if (!apiKey) throw new Error("APIキーが取得できません");
 
       sessionStorage.setItem(
-        "allPlaces",
+        CACHE_KEY,
         JSON.stringify({
           timestamp: Date.now(),
           storeData: allPlaces,
@@ -53,6 +56,7 @@ if (!cache || Date.now() - JSON.parse(cache).timestamp > 60 * 60 * 1000) {
   const apiKey = parsed.apiKey;
   showData(todayEvent, apiKey);
 }
+
 function showData(todayEvent, apiKey) {
   const allStoreName = "飲食店";
   const allPlace = allPlaces[allStoreName] || [];
