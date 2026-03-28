@@ -3,23 +3,47 @@ let allPlaces = {};
 
 if (!cache || Date.now() - JSON.parse(cache).timestamp > 60 * 60 * 1000) {
   fetch("/api/data")
-    .then((res) => res.json())
-    .then((data) => {
-      const todayEvent = data.eventList[0];
-      allPlaces = data.places.places;
-      const apiKey = data.apiKey;
+    .then(async (res) => {
+      const contentType = res.headers.get("content-type") || "";
 
-      // キャッシュに保存
+      if (!res.ok) {
+        if (contentType.includes("application/json")) {
+          const errJson = await res.json();
+          throw new Error(errJson.error || "データ取得に失敗しました");
+        }
+        const errText = await res.text();
+        throw new Error(errText || "データ取得に失敗しました");
+      }
+
+      if (!contentType.includes("application/json")) {
+        throw new Error("サーバーからのレスポンスがJSON形式ではありません");
+      }
+
+      return res.json();
+    })
+    .then((data) => {
+      const todayEvent = data?.eventList?.[0];
+      if (!todayEvent) throw new Error("本日のイベントが見つかりませんでした");
+
+      allPlaces = data?.places?.places || {};
+      const apiKey = data?.apiKey;
+      if (!apiKey) throw new Error("APIキーが取得できません");
+
       sessionStorage.setItem(
         "allPlaces",
         JSON.stringify({
           timestamp: Date.now(),
           storeData: allPlaces,
-          todayEvent: todayEvent,
-          apiKey: apiKey,
+          todayEvent,
+          apiKey,
         }),
       );
+
       showData(todayEvent, apiKey);
+    })
+    .catch((err) => {
+      console.error(err);
+      alert(err.message);
     });
 } else {
   // キャッシュから取得
