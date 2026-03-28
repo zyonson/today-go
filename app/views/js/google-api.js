@@ -1,10 +1,52 @@
 const CACHE_KEY = "allPlaces";
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
-const cache = sessionStorage.getItem(CACHE_KEY);
 let allPlaces = {};
 
-if (!cache || Date.now() - JSON.parse(cache).timestamp > CACHE_TTL_MS) {
+function loadCacheSafely() {
+  const raw = sessionStorage.getItem(CACHE_KEY);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw);
+
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      typeof parsed.timestamp !== "number"
+    ) {
+      sessionStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+
+    if (Date.now() - parsed.timestamp > CACHE_TTL_MS) {
+      sessionStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+
+    return parsed;
+  } catch (e) {
+    console.warn("キャッシュJSONが壊れていたため削除します:", e);
+    sessionStorage.removeItem(CACHE_KEY);
+    return null;
+  }
+}
+
+function saveCacheSafely({ storeData, todayEvent, apiKey }) {
+  sessionStorage.setItem(
+    CACHE_KEY,
+    JSON.stringify({
+      timestamp: Date.now(),
+      storeData,
+      todayEvent,
+      apiKey,
+    }),
+  );
+}
+
+const cache = loadCacheSafely();
+
+if (!cache) {
   fetch("/api/data")
     .then(async (res) => {
       const contentType = res.headers.get("content-type") || "";
@@ -32,15 +74,11 @@ if (!cache || Date.now() - JSON.parse(cache).timestamp > CACHE_TTL_MS) {
       const apiKey = data?.apiKey;
       if (!apiKey) throw new Error("APIキーが取得できません");
 
-      sessionStorage.setItem(
-        CACHE_KEY,
-        JSON.stringify({
-          timestamp: Date.now(),
-          storeData: allPlaces,
-          todayEvent,
-          apiKey,
-        }),
-      );
+      saveCacheSafely({
+        storeData: allPlaces,
+        todayEvent,
+        apiKey,
+      });
 
       showData(todayEvent, apiKey);
     })
@@ -50,11 +88,16 @@ if (!cache || Date.now() - JSON.parse(cache).timestamp > CACHE_TTL_MS) {
     });
 } else {
   // キャッシュから取得
-  const parsed = JSON.parse(cache);
-  allPlaces = parsed.storeData;
-  const todayEvent = parsed.todayEvent;
-  const apiKey = parsed.apiKey;
-  showData(todayEvent, apiKey);
+  allPlaces = cache.storeData || {};
+  const todayEvent = cache.todayEvent;
+  const apiKey = cache.apiKey;
+
+  if (!todayEvent || !apiKey) {
+    sessionStorage.removeItem(CACHE_KEY);
+    location.reload();
+  } else {
+    showData(todayEvent, apiKey);
+  }
 }
 
 function showData(todayEvent, apiKey) {
