@@ -111,7 +111,16 @@ function showData(todayEvent, apiKey) {
 
   renderPlaces(allPlace);
 
+  if (window.google?.maps) {
+    window.initMap();
+    return;
+  }
+
+  if (document.getElementById("google-maps-script")) {
+    return;
+  }
   const script = document.createElement("script");
+  script.id = "google-maps-script";
   script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
   script.async = true;
   script.defer = true;
