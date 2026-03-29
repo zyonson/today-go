@@ -44,60 +44,57 @@ function saveCacheSafely({ storeData, todayEvent, apiKey }) {
   );
 }
 
-const cache = loadCacheSafely();
+function clearCache() {
+  sessionStorage.removeItem(CACHE_KEY);
+}
 
-if (!cache) {
-  fetch("/api/data")
-    .then(async (res) => {
-      const contentType = res.headers.get("content-type") || "";
+async function fetchDataAndRender() {
+  const res = await fetch("/api/data");
+  const contentType = res.headers.get("content-type") || "";
 
-      if (!res.ok) {
-        if (contentType.includes("application/json")) {
-          const errJson = await res.json();
-          throw new Error(errJson.error || "データ取得に失敗しました");
-        }
-        const errText = await res.text();
-        throw new Error(errText || "データ取得に失敗しました");
-      }
+  if (!res.ok) {
+    if (contentType.includes("application/json")) {
+      const errJson = await res.json();
+      throw new Error(errJson.error || "データ取得に失敗しました");
+    }
+    const errText = await res.text();
+    throw new Error(errText || "データ取得に失敗しました");
+  }
 
-      if (!contentType.includes("application/json")) {
-        throw new Error("サーバーからのレスポンスがJSON形式ではありません");
-      }
+  if (!contentType.includes("application/json")) {
+    throw new Error("サーバーからのレスポンスがJSON形式ではありません");
+  }
 
-      return res.json();
-    })
-    .then((data) => {
-      const todayEvent = data?.eventList?.[0];
-      if (!todayEvent) throw new Error("本日のイベントが見つかりませんでした");
+  const data = await res.json();
 
-      allPlaces = data?.places?.places || {};
-      const apiKey = data?.apiKey;
-      if (!apiKey) throw new Error("APIキーが取得できません");
+  const todayEvent = data?.eventList?.[0];
+  if (!todayEvent) throw new Error("本日のイベントが見つかりませんでした");
 
-      saveCacheSafely({
-        storeData: allPlaces,
-        todayEvent,
-        apiKey,
-      });
+  allPlaces = data?.places?.places || {};
+  const apiKey = data?.apiKey;
+  if (!apiKey) throw new Error("APIキーが取得できません");
 
-      showData(todayEvent, apiKey);
-    })
-    .catch((err) => {
-      console.error(err);
-      alert(err.message);
-    });
-} else {
-  // キャッシュから取得
+  saveCacheSafely({
+    storeData: allPlaces,
+    todayEvent,
+    apiKey,
+  });
+
+  showData(todayEvent, apiKey);
+}
+
+function loadFromCacheAndRender(cache) {
   allPlaces = cache.storeData || {};
   const todayEvent = cache.todayEvent;
   const apiKey = cache.apiKey;
 
   if (!todayEvent || !apiKey) {
-    sessionStorage.removeItem(CACHE_KEY);
-    location.reload();
-  } else {
-    showData(todayEvent, apiKey);
+    clearCache();
+    return false;
   }
+
+  showData(todayEvent, apiKey);
+  return true;
 }
 
 function showData(todayEvent, apiKey) {
@@ -126,3 +123,18 @@ function showData(todayEvent, apiKey) {
   script.defer = true;
   document.body.appendChild(script);
 }
+
+(async function initPage() {
+  try {
+    const cache = loadCacheSafely();
+
+    if (cache && loadFromCacheAndRender(cache)) {
+      return;
+    }
+
+    await fetchDataAndRender();
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+})();
