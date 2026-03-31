@@ -91,7 +91,7 @@ func handleData(w http.ResponseWriter, r *http.Request) {
 	client := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(token))
 	srv, err := calendar.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
-		http.Error(w, "カレンダーサービスの初期化に失敗しました", http.StatusInternalServerError)
+		writeJSONError(w, "カレンダーサービスの初期化に失敗しました", http.StatusInternalServerError)
 		return
 	}
 
@@ -105,18 +105,18 @@ func handleData(w http.ResponseWriter, r *http.Request) {
 	events, err := srv.Events.List("primary").ShowDeleted(false).SingleEvents(true).TimeMin(currentTime).TimeMax(endStr).MaxResults(10).OrderBy("startTime").Do()
 
 	if err != nil {
-		http.Error(w, "イベントの取得に失敗しました", http.StatusInternalServerError)
+		writeJSONError(w, "イベントの取得に失敗しました", http.StatusInternalServerError)
 		return
 	}
 
 	if len(events.Items) == 0 {
-		http.Error(w, "今日のイベントが見つかりませんでした。", http.StatusNotFound)
+		writeJSONError(w, "今日のイベントが見つかりませんでした。", http.StatusNotFound)
 		return
 	}
 
 	apiKey := Config.GoogleMapsAPIKey
 	if apiKey == "" {
-		http.Error(w, "Google Maps APIキーが設定されていません", http.StatusInternalServerError)
+		writeJSONError(w, "Google Maps APIキーが設定されていません", http.StatusInternalServerError)
 		return
 	}
 
