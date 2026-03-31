@@ -38,7 +38,7 @@ func handleToken(w http.ResponseWriter, r *http.Request) {
 
 	var req TokenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		writeJSONError(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
