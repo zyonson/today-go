@@ -21,12 +21,21 @@ import (
 )
 
 func ShowEventsAndPlaces(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	http.ServeFile(w, r, Config.Static+"/templates/login.html")
 }
 
 var store = sessions.NewCookieStore([]byte(Config.SessionSecret))
 
 func handleToken(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSONError(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	var req TokenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -46,10 +55,19 @@ func handleToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleTop(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	http.ServeFile(w, r, Config.Static+"/templates/top.html")
 }
 
 func handleData(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeJSONError(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	session, _ := store.Get(r, "session-name")
 
 	accessTokenRaw := session.Values["access_token"]
