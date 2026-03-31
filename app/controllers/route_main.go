@@ -45,7 +45,6 @@ func handleToken(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session-name")
 	session.Values["access_token"] = req.AccessToken
 	session.Values["userId"] = req.Email
-	log.Println(req.AccessToken)
 	log.Println(req.Email)
 	if err := session.Save(r, w); err != nil {
 		http.Error(w, "セッション保存に失敗しました", http.StatusInternalServerError)
