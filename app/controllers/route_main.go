@@ -67,9 +67,19 @@ func handleData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, _ := store.Get(r, "session-name")
+	session, err := store.Get(r, "session-name")
+	if err != nil {
+		writeJSONError(w, "セッションの取得に失敗しました", http.StatusUnauthorized)
+		return
+	}
 
 	accessTokenRaw := session.Values["access_token"]
+	if accessTokenRaw == nil {
+		log.Println("セッションにアクセストークンが存在しません")
+		writeJSONError(w, "ログイン情報が見つかりません", http.StatusUnauthorized)
+		return
+	}
+
 	accessToken, ok := accessTokenRaw.(string)
 	if !ok || accessToken == "" {
 		log.Println("アクセストークンが見つかりません")
